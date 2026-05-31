@@ -1,0 +1,1808 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Mahjong Solitaire — 麻雀</title>
+  
+  <!-- Premium Traditional Calligraphy and Serif Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;1,400&family=Noto+Serif+SC:wght@400;500;700;900&family=JetBrains+Mono:wght@300;400;500&display=swap" rel="stylesheet">
+
+  <style>
+    /* =========================================================================
+       COLOR VARIABLES & CORE SYSTEM
+       Traditional imperial palette: Felt Green, Bone Ivory, Jade Back, Vermillion
+       ========================================================================= */
+    :root {
+      --felt-light: #163622;
+      --felt-dark: #08170e;
+      --gold: #dfb356;
+      --gold-dim: #ac8434;
+      --vermillion: #b52c16;
+      --vermillion-deep: #7c1a0c;
+      --jade-dark: #122c19;
+      --jade-mid: #1d4d2b;
+      --jade-light: #307544;
+      --ivory-top: #fffefb;
+      --ivory-base: #ebdcb9;
+      --ink-dark: #14110e;
+      --ink-soft: #383129;
+      --blue-indigo: #163c66;
+      --tile-shadow: rgba(8, 6, 4, 0.45);
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    html, body {
+      height: 100%;
+      overflow: hidden;
+      background-color: var(--felt-dark);
+    }
+
+    body {
+      font-family: 'Cormorant Garamond', serif;
+      /* Gorgeous velvet-felt table texture with subtle radial light reflection */
+      background:
+        radial-gradient(circle at 50% 45%, var(--felt-light) 0%, var(--felt-dark) 100%);
+      color: var(--ivory-top);
+      position: relative;
+      user-select: none;
+      -webkit-user-select: none;
+    }
+
+    /* Elegant velvet fabric texturing overlay */
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background-image:
+        repeating-linear-gradient(0deg, rgba(235, 226, 200, 0.015) 0px, rgba(235, 226, 200, 0.015) 1px, transparent 1px, transparent 3px),
+        repeating-linear-gradient(90deg, rgba(235, 226, 200, 0.015) 0px, rgba(235, 226, 200, 0.015) 1px, transparent 1px, transparent 3px);
+      pointer-events: none;
+      z-index: 1;
+    }
+
+    /* Traditional imperial golden border frame */
+    body::after {
+      content: '';
+      position: fixed;
+      inset: 12px;
+      border: 1px solid rgba(223, 179, 86, 0.22);
+      pointer-events: none;
+      z-index: 2;
+    }
+
+    /* Traditional Chinese Brass Corner Brackets */
+    .frame-corner {
+      position: fixed;
+      width: 32px;
+      height: 32px;
+      border: 2px solid var(--gold);
+      opacity: 0.6;
+      pointer-events: none;
+      z-index: 3;
+    }
+    .frame-corner.tl { top: 8px; left: 8px; border-right: none; border-bottom: none; }
+    .frame-corner.tr { top: 8px; right: 8px; border-left: none; border-bottom: none; }
+    .frame-corner.bl { bottom: 8px; left: 8px; border-right: none; border-top: none; }
+    .frame-corner.br { bottom: 8px; right: 8px; border-left: none; border-top: none; }
+
+    /* Main container Layout */
+    .app {
+      position: relative;
+      z-index: 4;
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+      padding: 24px 32px 18px;
+    }
+
+    /* =========================================================================
+       LUXURY HEADER & STATS
+       Antique dark lacquer backplate with gold engraving typography
+       ========================================================================= */
+    header {
+      display: grid;
+      grid-template-columns: 1fr auto 1fr;
+      align-items: center;
+      gap: 24px;
+      padding-bottom: 14px;
+      border-bottom: 1px solid rgba(223, 179, 86, 0.18);
+    }
+
+    .header-left {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .title-block {
+      text-align: center;
+    }
+
+    .title-cn {
+      font-family: 'Noto Serif SC', serif;
+      font-weight: 900;
+      font-size: 38px;
+      color: var(--gold);
+      letter-spacing: 12px;
+      line-height: 1;
+      text-shadow: 0 2px 4px rgba(0,0,0,0.5), 0 0 12px rgba(223, 179, 86, 0.3);
+    }
+
+    .title-en {
+      font-family: 'Cormorant Garamond', serif;
+      font-weight: 500;
+      font-style: italic;
+      font-size: 13px;
+      color: var(--ivory-base);
+      letter-spacing: 5px;
+      text-transform: uppercase;
+      margin-top: 5px;
+      opacity: 0.85;
+    }
+
+    /* Elegant Stats Display Cards */
+    .stat {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 0 16px;
+      position: relative;
+    }
+
+    .stat + .stat::before {
+      content: '';
+      position: absolute;
+      left: 0;
+      top: 50%;
+      transform: translateY(-50%);
+      height: 24px;
+      width: 1px;
+      background: rgba(223, 179, 86, 0.25);
+    }
+
+    .stat-label {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 9px;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      color: var(--gold);
+      opacity: 0.8;
+    }
+
+    .stat-value {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 28px;
+      font-weight: 500;
+      color: var(--ivory-top);
+      line-height: 1.1;
+      margin-top: 1px;
+      font-variant-numeric: tabular-nums;
+      text-shadow: 0 1px 2px rgba(0,0,0,0.4);
+    }
+
+    .header-right {
+      display: flex;
+      justify-content: flex-end;
+      align-items: center;
+      gap: 8px;
+    }
+
+    /* Elegant Gilded Chinese Buttons */
+    button.btn {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 15px;
+      font-style: italic;
+      font-weight: 500;
+      background: rgba(255, 255, 255, 0.04);
+      border: 1px solid rgba(223, 179, 86, 0.35);
+      color: var(--ivory-base);
+      padding: 6px 14px;
+      cursor: pointer;
+      border-radius: 3px;
+      letter-spacing: 1px;
+      transition: all 0.2s cubic-bezier(0.2, 0.8, 0.2, 1);
+      position: relative;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+    }
+
+    button.btn:hover {
+      background: var(--gold);
+      color: var(--felt-dark);
+      border-color: var(--gold);
+      box-shadow: 0 4px 10px rgba(223, 179, 86, 0.3);
+      transform: translateY(-1px);
+    }
+
+    button.btn:active {
+      transform: translateY(1px);
+    }
+
+    button.btn.active {
+      background: var(--gold-dim);
+      border-color: var(--gold);
+      color: var(--felt-dark);
+      font-weight: 600;
+    }
+    button.btn.active:hover {
+      background: var(--gold);
+      color: var(--felt-dark);
+    }
+
+    button.btn.primary {
+      background: var(--vermillion);
+      border-color: var(--vermillion);
+      color: var(--ivory-top);
+    }
+    button.btn.primary:hover {
+      background: var(--vermillion-deep);
+      border-color: var(--vermillion-deep);
+      box-shadow: 0 4px 12px rgba(181, 44, 22, 0.4);
+    }
+
+    button.btn:disabled {
+      opacity: 0.25;
+      cursor: not-allowed;
+      box-shadow: none !important;
+      transform: none !important;
+    }
+
+    /* =========================================================================
+       BOARD & TABLETOP CONTAINER
+       ========================================================================= */
+    .board-wrap {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+      position: relative;
+      padding: 10px 0;
+    }
+
+    .board {
+      position: relative;
+      transform-origin: center center;
+    }
+
+    /* =========================================================================
+       THE MASTERPIECE 3D TILE DESIGN
+       Real Chinese dual-layer design: Ivory Bone face + Green Imperial Jade back
+       ========================================================================= */
+    .tile {
+      position: absolute;
+      /* Jade body gradient */
+      background: linear-gradient(145deg, var(--jade-light) 0%, var(--jade-mid) 40%, var(--jade-dark) 100%);
+      border-radius: 5px;
+      cursor: pointer;
+      transition: transform 0.16s cubic-bezier(0.2, 0.8, 0.2, 1), box-shadow 0.16s cubic-bezier(0.2, 0.8, 0.2, 1), filter 0.25s ease;
+      border: 1px solid rgba(0, 0, 0, 0.5);
+    }
+
+    /* The Ivory Piece Plate (Layered beautifully on top with gold boundary) */
+    .tile::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 5px;   /* Expose deep jade on the right edge */
+      bottom: 7px; /* Expose deep jade on the bottom edge */
+      /* Authentic aged ivory silk sheen */
+      background: linear-gradient(135deg, var(--ivory-top) 0%, #fbf5e2 75%, var(--ivory-base) 100%);
+      border-radius: 4px 2px 2px 4px;
+      box-shadow: 
+        inset 0 1px 0px rgba(255,255,255,0.85),
+        inset 1px 0px 0px rgba(255,255,255,0.6),
+        /* Subtle gold seam line where organic bone meets hand-carved jade */
+        0 2px 0px var(--gold-dim);
+      pointer-events: none;
+      z-index: 1;
+    }
+
+    /* The functional surface containing the glyph designs */
+    .tile-face {
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 5px;
+      bottom: 7px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      z-index: 2;
+      text-align: center;
+      line-height: 1;
+      padding: 2px 3px;
+      pointer-events: none;
+    }
+
+    /* Real carved-in chisel effect on glyph representations */
+    .tile-glyph {
+      font-family: 'Noto Serif SC', serif;
+      font-size: 27px;
+      font-weight: 700;
+      color: var(--ink-dark);
+      /* Subtle white bottom light & dark top shadow mimics real physical carving indentation */
+      text-shadow: 
+        -0.5px -0.5px 0.5px rgba(0, 0, 0, 0.3), 
+        0.5px 0.5px 0.5px rgba(255, 255, 255, 0.9);
+    }
+
+    /* Color styles matching the rich calligraphic ink tradition */
+    .tile-glyph.red { 
+      color: var(--vermillion); 
+      text-shadow: -0.5px -0.5px 0.5px rgba(0, 0, 0, 0.4), 0.5px 0.5px 0.5px rgba(255, 255, 255, 0.9);
+    }
+    .tile-glyph.green { 
+      color: var(--jade-mid); 
+      text-shadow: -0.5px -0.5px 0.5px rgba(0, 0, 0, 0.4), 0.5px 0.5px 0.5px rgba(255, 255, 255, 0.9);
+    }
+    .tile-glyph.blue { 
+      color: var(--blue-indigo); 
+      text-shadow: -0.5px -0.5px 0.5px rgba(0, 0, 0, 0.35), 0.5px 0.5px 0.5px rgba(255, 255, 255, 0.9);
+    }
+    .tile-glyph.gold { 
+      color: var(--gold-dim); 
+      text-shadow: -0.5px -0.5px 0.5px rgba(0, 0, 0, 0.4), 0.5px 0.5px 0.5px rgba(255, 255, 255, 0.9);
+    }
+
+    /* Special Character split styling */
+    .tile-char-num {
+      font-size: 19px;
+      color: var(--ink-soft);
+      font-weight: 700;
+      line-height: 0.9;
+      text-shadow: -0.5px -0.5px 0px rgba(0,0,0,0.15), 0.5px 0.5px 0px rgba(255,255,255,0.7);
+    }
+    .tile-char-wan {
+      font-size: 15px;
+      color: var(--vermillion);
+      font-weight: 900;
+      line-height: 0.9;
+      margin-top: 1px;
+      text-shadow: -0.5px -0.5px 0px rgba(0,0,0,0.25), 0.5px 0.5px 0px rgba(255,255,255,0.7);
+    }
+
+    /* Classic White Dragon geometry border style */
+    .tile-face.white-dragon::before {
+      content: '';
+      position: absolute;
+      inset: 6px;
+      border: 2px solid var(--blue-indigo);
+      border-radius: 2px;
+      box-shadow: inset 0 0 1px rgba(0,0,0,0.15);
+    }
+    .tile-face.white-dragon::after {
+      content: '';
+      position: absolute;
+      inset: 10px;
+      border: 1px dashed var(--blue-indigo);
+      opacity: 0.8;
+      border-radius: 1px;
+    }
+
+    .tile-sub {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 10px;
+      font-weight: 600;
+      color: var(--ink-soft);
+      margin-top: 1px;
+      letter-spacing: 0.5px;
+      font-style: italic;
+      opacity: 0.85;
+    }
+
+    /* Interactive physics reactions */
+    .tile.free {
+      cursor: pointer;
+    }
+    .tile.blocked {
+      cursor: not-allowed;
+    }
+
+    /* Soft-dim mode for blocked tiles so playable choices emerge cleanly */
+    .board.distinguish .tile.blocked {
+      filter: saturate(0.55) brightness(0.68);
+    }
+    .board.distinguish .tile.blocked::before {
+      background: linear-gradient(135deg, #efeae0 0%, #dbd0b6 100%);
+    }
+
+    /* Hover Lift Effect */
+    .tile.free:not(.selected):hover {
+      transform: translate(-2px, -3px);
+      filter: brightness(1.04);
+    }
+
+    /* Physical 3D Selection state: Lifts up and casts a wider shadow */
+    .tile.selected {
+      transform: translate(-3px, -5px);
+      box-shadow:
+        0 0 0 1px var(--gold),
+        0px 0px 15px var(--gold-glow),
+        4px 6px 14px rgba(0, 0, 0, 0.65) !important;
+    }
+
+    /* Sparkling matching hint animations */
+    .tile.hint {
+      animation: hintGlow 1.2s ease-in-out infinite;
+    }
+
+    @keyframes hintGlow {
+      0%, 100% {
+        box-shadow: 
+          0 0 0 rgba(223, 179, 86, 0),
+          1px 1px 3px rgba(0,0,0,0.4);
+      }
+      50% {
+        box-shadow: 
+          0 0 25px var(--gold),
+          0 0 0 2px var(--gold),
+          0 4px 10px rgba(0,0,0,0.5);
+      }
+    }
+
+    /* Authentic disintegration on matching pairings */
+    .tile.removing {
+      animation: tileVanish 0.35s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+      pointer-events: none;
+      box-shadow: none !important;
+    }
+    .tile.removing::before {
+      display: none;
+    }
+
+    @keyframes tileVanish {
+      0% { transform: scale(1) translate(0, 0); opacity: 1; }
+      40% { transform: scale(1.15) translate(-4px, -6px); opacity: 0.8; }
+      100% { transform: scale(0.1) rotate(15deg); opacity: 0; }
+    }
+
+    /* =========================================================================
+       VECTOR SPARK MATCH PARTICLES
+       ========================================================================= */
+    .spark-particle {
+      position: absolute;
+      border-radius: 50%;
+      pointer-events: none;
+      z-index: 9999;
+      transform-origin: center center;
+    }
+
+    /* =========================================================================
+       OVERLAYS, MODALS, SCALES
+       Beautiful Imperial lacquered scroll designs
+       ========================================================================= */
+    .overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(8, 12, 10, 0.82);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 100;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.3s cubic-bezier(0.2, 0.8, 0.2, 1);
+      backdrop-filter: blur(4px);
+    }
+
+    .overlay.show {
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    .modal {
+      background: radial-gradient(circle at top, #faf6eb 0%, #ebdcb9 100%);
+      color: var(--ink-dark);
+      padding: 40px 54px;
+      border: 2px solid var(--ink-dark);
+      position: relative;
+      max-width: 90vw;
+      border-radius: 4px;
+      box-shadow:
+        0 0 0 5px #ebdcb9,
+        0 0 0 6px var(--gold),
+        0 20px 50px rgba(0,0,0,0.85);
+    }
+
+    .modal-title {
+      font-family: 'Noto Serif SC', serif;
+      font-size: 38px;
+      font-weight: 900;
+      color: var(--vermillion);
+      letter-spacing: 12px;
+      text-align: center;
+      margin-bottom: 2px;
+      text-shadow: 1px 1px 0 rgba(255,255,255,0.7);
+    }
+
+    .modal-sub {
+      font-family: 'Cormorant Garamond', serif;
+      font-style: italic;
+      font-size: 16px;
+      font-weight: 500;
+      color: var(--ink-soft);
+      letter-spacing: 4px;
+      text-transform: uppercase;
+      text-align: center;
+      margin-bottom: 24px;
+      border-bottom: 1px solid rgba(56, 49, 41, 0.15);
+      padding-bottom: 12px;
+    }
+
+    .modal-stats {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 6px;
+      margin-bottom: 24px;
+    }
+
+    .final-score {
+      color: var(--vermillion);
+      font-size: 42px;
+      font-weight: 700;
+      text-shadow: 1px 1px 0 rgba(255,255,255,0.8);
+    }
+
+    .score-breakdown {
+      width: 100%;
+      min-width: 280px;
+      margin-top: 10px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 11px;
+      color: var(--ink-soft);
+      letter-spacing: 0.5px;
+      line-height: 1.8;
+      border-top: 1px dashed rgba(56, 49, 41, 0.2);
+      border-bottom: 1px dashed rgba(56, 49, 41, 0.2);
+      padding: 10px 0;
+    }
+
+    .score-breakdown .row {
+      display: flex;
+      justify-content: space-between;
+      gap: 30px;
+      color: var(--ink-dark);
+    }
+    
+    .score-breakdown .row.bonus span:last-child {
+      color: var(--vermillion-deep);
+      font-weight: 600;
+    }
+
+    .score-breakdown .row.totals {
+      display: block;
+      text-align: center;
+      color: var(--ink-soft);
+      font-weight: 500;
+      margin-top: 4px;
+      opacity: 0.85;
+    }
+
+    /* RED IMPERIAL SEAL STAMP */
+    .seal {
+      position: absolute;
+      top: -20px;
+      right: -20px;
+      width: 62px;
+      height: 62px;
+      background: var(--vermillion);
+      color: var(--ivory-top);
+      font-family: 'Noto Serif SC', serif;
+      font-size: 15px;
+      font-weight: 900;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      line-height: 1;
+      text-align: center;
+      transform: rotate(-10deg);
+      border-radius: 4px;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+      border: 2px dashed rgba(255,255,255,0.3);
+      letter-spacing: 1px;
+      z-index: 10;
+    }
+
+    /* RECENT HIGH-SCORE HISTORY LIST */
+    .history-block {
+      margin-top: 18px;
+      width: 100%;
+      min-width: 280px;
+      text-align: left;
+    }
+
+    .history-block .history-title {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 10px;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      color: var(--vermillion);
+      margin-bottom: 8px;
+      padding-bottom: 4px;
+      border-bottom: 1px solid rgba(181, 44, 22, 0.2);
+      font-weight: 600;
+    }
+
+    .history-list {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 11px;
+      line-height: 1.5;
+    }
+
+    .history-row {
+      display: grid;
+      grid-template-columns: 24px 18px 1fr auto;
+      gap: 12px;
+      align-items: center;
+      padding: 4px 6px;
+      color: var(--ink-soft);
+      border-bottom: 1px dashed rgba(56, 49, 41, 0.1);
+    }
+    .history-row:last-child {
+      border-bottom: none;
+    }
+
+    .history-row.current {
+      background: rgba(181, 44, 22, 0.08);
+      border-left: 2px solid var(--vermillion);
+      padding-left: 4px;
+      color: var(--vermillion-deep);
+      font-weight: 600;
+    }
+
+    .history-rank {
+      color: var(--ink-soft);
+      opacity: 0.6;
+      font-size: 10px;
+    }
+
+    .history-row.current .history-rank {
+      color: var(--vermillion);
+      opacity: 1;
+    }
+
+    .history-outcome {
+      font-family: 'Noto Serif SC', serif;
+      color: var(--ink-soft);
+      opacity: 0.4;
+      text-align: center;
+    }
+    .history-outcome.won {
+      color: var(--vermillion);
+      opacity: 1;
+      font-weight: 700;
+    }
+
+    .history-score {
+      font-variant-numeric: tabular-nums;
+      font-weight: 600;
+    }
+
+    .history-meta {
+      font-size: 10px;
+      color: var(--ink-soft);
+      opacity: 0.8;
+    }
+
+    .history-empty {
+      font-family: 'Cormorant Garamond', serif;
+      font-style: italic;
+      font-size: 14px;
+      color: var(--ink-soft);
+      text-align: center;
+      padding: 10px 0;
+    }
+
+    .modal-actions {
+      display: flex;
+      gap: 12px;
+      justify-content: center;
+      margin-top: 14px;
+    }
+
+    /* INFO BOOKLET OVERLAY */
+    .info-modal {
+      padding: 36px 44px 28px;
+      width: 490px;
+      max-width: 95vw;
+      text-align: left;
+    }
+
+    .info-modal .modal-title,
+    .info-modal .modal-sub {
+      text-align: center;
+    }
+
+    .info-seal {
+      background: var(--ink-dark);
+    }
+
+    .info-body {
+      margin-top: 18px;
+      max-height: 52vh;
+      overflow-y: auto;
+      padding-right: 8px;
+    }
+
+    .info-section {
+      margin-bottom: 20px;
+    }
+
+    .info-section-title {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 10px;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      color: var(--vermillion);
+      margin-bottom: 8px;
+      padding-bottom: 4px;
+      border-bottom: 1px solid rgba(181, 44, 22, 0.2);
+      font-weight: 600;
+    }
+
+    .info-text {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 16px;
+      line-height: 1.5;
+      color: var(--ink-dark);
+    }
+    .info-text b {
+      color: var(--vermillion);
+      font-weight: 600;
+    }
+
+    .info-note {
+      font-family: 'Cormorant Garamond', serif;
+      font-style: italic;
+      font-size: 13px;
+      color: var(--ink-soft);
+      margin-top: 4px;
+    }
+
+    .info-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 16px;
+    }
+    .info-table tr {
+      border-bottom: 1px dashed rgba(56, 49, 41, 0.12);
+    }
+    .info-table tr:last-child {
+      border-bottom: none;
+    }
+    .info-table td {
+      padding: 5px 0;
+      color: var(--ink-dark);
+    }
+    .info-table .info-val {
+      text-align: right;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--vermillion);
+    }
+
+    .info-glyph {
+      display: inline-block;
+      font-family: 'Noto Serif SC', serif;
+      font-weight: 700;
+      font-size: 18px;
+      width: 24px;
+      text-align: center;
+      margin-right: 6px;
+      text-shadow: 0.5px 0.5px 0 rgba(255,255,255,0.7);
+    }
+    .info-glyph.red { color: var(--vermillion); }
+    .info-glyph.blue { color: var(--blue-indigo); }
+    .info-glyph.gold { color: var(--gold-dim); }
+
+    /* Custom high-end scrollbars */
+    .info-body::-webkit-scrollbar {
+      width: 5px;
+    }
+    .info-body::-webkit-scrollbar-track {
+      background: rgba(0,0,0,0.03);
+    }
+    .info-body::-webkit-scrollbar-thumb {
+      background: var(--gold-dim);
+      border-radius: 3px;
+    }
+
+    /* =========================================================================
+       TOAST ALERTS
+       ========================================================================= */
+    .toast {
+      position: fixed;
+      bottom: 30px;
+      left: 50%;
+      transform: translateX(-50%) translateY(20px);
+      background: var(--ink-dark);
+      color: var(--ivory-top);
+      padding: 10px 22px;
+      border-radius: 3px;
+      font-family: 'Cormorant Garamond', serif;
+      font-style: italic;
+      font-size: 15px;
+      letter-spacing: 1px;
+      opacity: 0;
+      transition: opacity 0.25s, transform 0.25s cubic-bezier(0.2, 0.8, 0.2, 1);
+      z-index: 200;
+      border: 1px solid var(--gold);
+      box-shadow: 0 4px 15px rgba(0,0,0,0.5);
+    }
+    .toast.show {
+      opacity: 1;
+      transform: translateX(-50%) translateY(0);
+    }
+
+    /* =========================================================================
+       RESPONSIVENESS & SCALES
+       ========================================================================= */
+    @media (max-width: 720px) {
+      .app { padding: 12px 12px 6px; }
+      .board-wrap { padding: 4px 0; }
+      header {
+        grid-template-columns: 1fr;
+        grid-template-rows: auto auto;
+        gap: 8px;
+        padding-bottom: 8px;
+      }
+      .title-block { order: -1; }
+      .title-cn { font-size: 26px; letter-spacing: 6px; }
+      .title-en { font-size: 10px; letter-spacing: 2px; }
+      .header-left {
+        grid-row: 2;
+        grid-column: 1;
+        justify-content: flex-start;
+        gap: 0;
+      }
+      .header-right {
+        grid-row: 2;
+        grid-column: 1;
+        justify-self: end;
+        gap: 4px;
+      }
+      .stat { padding: 0 6px; }
+      .stat-value { font-size: 18px; }
+      .stat-label { font-size: 7px; letter-spacing: 1px; }
+      button.btn { padding: 4px 8px; font-size: 12px; letter-spacing: 0.5px; }
+      .modal { padding: 24px 20px; }
+      .modal-title { font-size: 26px; letter-spacing: 5px; }
+    }
+
+    @media (max-width: 420px) {
+      .stat { padding: 0 4px; }
+      .stat-value { font-size: 15px; }
+      button.btn { padding: 3px 6px; font-size: 11px; }
+      .header-right { gap: 3px; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Classical Brackets -->
+  <div class="frame-corner tl"></div>
+  <div class="frame-corner tr"></div>
+  <div class="frame-corner bl"></div>
+  <div class="frame-corner br"></div>
+
+  <!-- Main Game Workspace -->
+  <div class="app">
+    <header>
+      <div class="header-left">
+        <div class="stat">
+          <div class="stat-label">Tiles</div>
+          <div class="stat-value" id="stat-tiles">144</div>
+        </div>
+        <div class="stat">
+          <div class="stat-label">Score</div>
+          <div class="stat-value" id="stat-score">0</div>
+        </div>
+        <div class="stat">
+          <div class="stat-label">Time</div>
+          <div class="stat-value" id="stat-time">0:00</div>
+        </div>
+      </div>
+
+      <div class="title-block">
+        <div class="title-cn">麻雀</div>
+        <div class="title-en">— Mahjong Solitaire —</div>
+      </div>
+
+      <div class="header-right">
+        <!-- Highlight toggle dims blocked tiles so playable ones glow -->
+        <button class="btn active" id="btn-glow" title="Deselect or dim blocked tiles so free ones stand out">Highlight</button>
+        <button class="btn" id="btn-hint">Hint</button>
+        <button class="btn" id="btn-info" title="How scoring works">Rules</button>
+        <button class="btn primary" id="btn-new">New Game</button>
+      </div>
+    </header>
+
+    <div class="board-wrap" id="board-wrap">
+      <div class="board distinguish" id="board"></div>
+    </div>
+  </div>
+
+  <!-- End Game Alert Overlay (Win / Lose) -->
+  <div class="overlay" id="overlay">
+    <div class="modal">
+      <div class="seal" id="seal">福</div>
+      <div class="modal-title" id="modal-title">勝利</div>
+      <div class="modal-sub" id="modal-sub">Victory</div>
+      <div class="modal-stats" id="modal-stats"></div>
+      <div class="modal-actions">
+        <button class="btn primary" id="btn-modal-new">Play Again</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Rules Book Overlay -->
+  <div class="overlay" id="info-overlay">
+    <div class="modal info-modal">
+      <div class="seal info-seal">記</div>
+      <div class="modal-title">記分</div>
+      <div class="modal-sub">Scoring & Rules</div>
+
+      <div class="info-body">
+        <div class="info-section">
+          <div class="info-section-title">Tile Target Values</div>
+          <table class="info-table">
+            <tr><td><span class="info-glyph">①</span> Dots / Bamboo / Characters</td><td class="info-val">5</td></tr>
+            <tr><td><span class="info-glyph blue">東</span> Winds</td><td class="info-val">10</td></tr>
+            <tr><td><span class="info-glyph red">中</span> Dragons</td><td class="info-val">20</td></tr>
+            <tr><td><span class="info-glyph gold">梅</span> Flowers / Seasons</td><td class="info-val">50</td></tr>
+          </table>
+          <div class="info-note">Base value per tile. Each matched pair scores double (2x).</div>
+        </div>
+
+        <div class="info-section">
+          <div class="info-section-title">Combo Multiplier Chain</div>
+          <div class="info-text">Match another pair within <b>5 seconds</b> to build your chain: ×2, ×3, ×4… Clicking blocked tiles, missing clicks, using Hints, or taking too long resets your combo chain back to ×1.</div>
+        </div>
+
+        <div class="info-section">
+          <div class="info-section-title">Time Penalty</div>
+          <div class="info-text">Traditional wisdom values swift minds. Your final outcome score loses <b>1 point for each second</b> of play. The in-game meter displays accumulating matching points; final calculations are applied when the board finishes.</div>
+        </div>
+
+        <div class="info-section">
+          <div class="info-section-title">Enlightenment Bonus</div>
+          <div class="info-text">Successfully clear all 144 tiles from the velvet table to receive an extra completion bonus: <b>+500 points</b>.</div>
+        </div>
+
+        <div class="info-section">
+          <div class="info-section-title">Classic Hand Rules</div>
+          <div class="info-text">You can match identical tiles to remove them. Flowers can match any flower, and Seasons can match any season. A tile is free (selectable) ONLY if nothing sits directly above it AND at least one long edge (left or right side) is completely open.</div>
+        </div>
+
+        <div class="info-section">
+          <div class="info-section-title">Recent Matches</div>
+          <div id="info-history"></div>
+        </div>
+      </div>
+
+      <div class="modal-actions">
+        <button class="btn primary" id="btn-info-close">Return to Table</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="toast" id="toast"></div>
+
+  <!-- Dynamic Game Engine -->
+  <script>
+    /* =========================================================================
+       AUDIO SYNTHESIS ENGINE (Web Audio API)
+       High-quality physical dual-impact clack simulating bone/lacquer tiles
+       ========================================================================= */
+    function playTileClack() {
+      try {
+        const AudioContext = window.AudioContext || window.webkitAudioContext;
+        if (!AudioContext) return;
+        const ctx = new AudioContext();
+
+        // 1. Bass Impact transient
+        const osc1 = ctx.createOscillator();
+        const gain1 = ctx.createGain();
+        osc1.type = 'sine';
+        osc1.frequency.setValueAtTime(420, ctx.currentTime);
+        osc1.frequency.exponentialRampToValueAtTime(110, ctx.currentTime + 0.08);
+
+        gain1.gain.setValueAtTime(0.35, ctx.currentTime);
+        gain1.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.08);
+
+        // 2. High Ceramic/Ivory Knuckle Click transient
+        const osc2 = ctx.createOscillator();
+        const gain2 = ctx.createGain();
+        osc2.type = 'triangle';
+        osc2.frequency.setValueAtTime(1800, ctx.currentTime);
+        osc2.frequency.exponentialRampToValueAtTime(750, ctx.currentTime + 0.025);
+
+        gain2.gain.setValueAtTime(0.18, ctx.currentTime);
+        gain2.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.025);
+
+        // 3. Medium resonance representing the heavy dense body (Bamboo back)
+        const osc3 = ctx.createOscillator();
+        const gain3 = ctx.createGain();
+        osc3.type = 'sine';
+        osc3.frequency.setValueAtTime(220, ctx.currentTime);
+
+        gain3.gain.setValueAtTime(0.28, ctx.currentTime);
+        gain3.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.14);
+
+        // Wire connections to destination
+        osc1.connect(gain1); gain1.connect(ctx.destination);
+        osc2.connect(gain2); gain2.connect(ctx.destination);
+        osc3.connect(gain3); gain3.connect(ctx.destination);
+
+        osc1.start(); osc1.stop(ctx.currentTime + 0.09);
+        osc2.start(); osc2.stop(ctx.currentTime + 0.03);
+        osc3.start(); osc3.stop(ctx.currentTime + 0.15);
+      } catch (e) {
+        // Handle blocked auto-play policies gracefully
+      }
+    }
+
+    /* =========================================================================
+       MATH & COLLECTION HELPERS
+       ========================================================================= */
+    function range(a, b) {
+      const r = [];
+      for (let i = a; i <= b; i++) r.push(i);
+      return r;
+    }
+
+    function shuffleInPlace(arr) {
+      for (let i = arr.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [arr[i], arr[j]] = [arr[j], arr[i]];
+      }
+    }
+
+    /* =========================================================================
+       TILE CONFIGURATION & DECK BUILDING
+       Traditional chinese suits (Dots, Bamboos, characters) + winds + dragons
+       ========================================================================= */
+    const STANDARD_COPIES = 4;
+
+    const DOT_GLYPHS  = ['①','②','③','④','⑤','⑥','⑦','⑧','⑨'];
+    const BAM_GLYPHS  = ['❶','❷','❸','❹','❺','❻','❼','❽','❾'];
+    const CHAR_GLYPHS = ['一','二','三','四','五','六','七','八','九'];
+
+    const WINDS = [
+      { glyph: '東', sub: 'East'  },
+      { glyph: '南', sub: 'South' },
+      { glyph: '西', sub: 'West'  },
+      { glyph: '北', sub: 'North' },
+    ];
+
+    const DRAGONS = [
+      { id: 'drag-r', glyph: '中', sub: 'Red',   color: 'red'   },
+      { id: 'drag-g', glyph: '發', sub: 'Green', color: 'green' },
+      { id: 'drag-w', glyph: '白', sub: 'White'                 },
+    ];
+
+    const FLOWERS = [
+      { id: 'f1', glyph: '梅', sub: 'Plum',    color: 'red'   },
+      { id: 'f2', glyph: '蘭', sub: 'Orchid',  color: 'green' },
+      { id: 'f3', glyph: '竹', sub: 'Bamboo',  color: 'green' },
+      { id: 'f4', glyph: '菊', sub: 'Chrys.',  color: 'gold'  },
+    ];
+
+    const SEASONS = [
+      { id: 's1', glyph: '春', sub: 'Spring', color: 'green' },
+      { id: 's2', glyph: '夏', sub: 'Summer', color: 'red'   },
+      { id: 's3', glyph: '秋', sub: 'Autumn', color: 'gold'  },
+      { id: 's4', glyph: '冬', sub: 'Winter', color: 'blue'  },
+    ];
+
+    const TILE_DEFS = [
+      ...DOT_GLYPHS .map((g, i) => ({ id: `dot${i+1}`,  suit: 'dot',  glyph: g, group: `dot${i+1}`                     })),
+      ...BAM_GLYPHS .map((g, i) => ({ id: `bam${i+1}`,  suit: 'bam',  glyph: g, group: `bam${i+1}`,  color: 'green'    })),
+      ...CHAR_GLYPHS.map((g, i) => ({ id: `char${i+1}`, suit: 'char', glyph: g, group: `char${i+1}`, color: 'red'      })),
+      ...WINDS  .map((w, i) => ({ id: `wind${i}`, suit: 'wind',   glyph: w.glyph, sub: w.sub, group: `wind${i}`, color: 'blue' })),
+      ...DRAGONS.map(d        => ({ ...d,         suit: 'dragon',                                 group: d.id                  })),
+    ];
+
+    function buildDeck() {
+      const deck = [];
+      for (const def of TILE_DEFS) {
+        for (let i = 0; i < STANDARD_COPIES; i++) {
+          deck.push({ ...def, uid: `${def.id}-${i}` });
+        }
+      }
+      for (const f of FLOWERS) deck.push({ ...f, suit: 'flower', group: 'flowers', uid: f.id });
+      for (const s of SEASONS) deck.push({ ...s, suit: 'season', group: 'seasons', uid: s.id });
+      return deck;
+    }
+
+    /* =========================================================================
+       MAHJONG TURTLE SOLITAIRE LAYOUT (144 tiles total)
+       Perfect multi-layer depth mapping
+       ========================================================================= */
+    const LAYOUT = (() => {
+      const positions = [];
+      const add = (layer, row, col) => positions.push({ layer, row, col });
+
+      const fillRect = (layer, rowStart, rowEnd, colStart, colEnd) => {
+        for (let r = rowStart; r <= rowEnd; r++) {
+          for (let c = colStart; c <= colEnd; c++) add(layer, r, c);
+        }
+      };
+
+      // Layer 0: Traditional turtle silhouette (76 tiles total)
+      const layer0Rows = [
+        { row: 0, cols: range(3, 8)  },
+        { row: 1, cols: range(2, 9)  },
+        { row: 2, cols: range(1, 10) },
+        { row: 3, cols: range(1, 10) },
+        { row: 4, cols: range(1, 10) },
+        { row: 5, cols: range(1, 10) },
+        { row: 6, cols: range(2, 9)  },
+        { row: 7, cols: range(2, 9)  },
+        { row: 8, cols: range(3, 8)  },
+      ];
+      for (const { row, cols } of layer0Rows) {
+        for (const col of cols) add(0, row, col);
+      }
+
+      // Corners: Layer 1 directly above base corners
+      for (const col of [3.5, 7.5]) {
+        add(1, 0, col);
+        add(1, 8, col);
+      }
+
+      // Wings: double heights sitting outside left/right flanks
+      for (const col of [0, 10]) {
+        add(1, 3.5, col);
+        add(2, 3.5, col);
+      }
+
+      // Central pyramid structures
+      fillRect(1, 1.5, 6.5, 3, 8);   // L1: 6x6=36
+      fillRect(2, 2.5, 5.5, 4, 7);   // L2: 4x4=16
+      fillRect(3, 3.5, 5.5, 5, 6);   // L3: 3x2=6
+      add(4, 3.5, 5.5);              // L4: Capstone top
+      add(4, 4.5, 5.5);              // L4: Capstone bottom
+
+      return positions;
+    })();
+
+    /* =========================================================================
+       BOARD GEOMETRY & GLOBAL SETTINGS
+       ========================================================================= */
+    const TILE_W = 56;
+    const TILE_H = 72;
+    const LAYER_OFFSET_X = 5;
+    const LAYER_OFFSET_Y = -6;
+    const BOARD_MARGIN = 20;
+
+    const COMBO_WINDOW_MS = 5000;
+    const TIME_PENALTY_PER_SEC = 1;
+    const COMPLETION_BONUS = 500;
+    const TILE_TIER_VALUE = {
+      dot: 5, bam: 5, char: 5,
+      wind: 10,
+      dragon: 20,
+      flower: 50, season: 50,
+    };
+
+    const TILE_REMOVE_MS = 350;
+    const HINT_FLASH_MS = 3600;
+    const TOAST_MS = 2200;
+
+    const SUIT_LABEL = { dot: '餅', bam: '索' };
+    const SUBLABEL_SUITS = new Set(['flower', 'season', 'wind', 'dragon']);
+
+    const HISTORY_KEY = 'mahjong-solitaire-recent-v1';
+    const MAX_HISTORY = 10;
+
+    /* =========================================================================
+       ELEMENT CACHING
+       ========================================================================= */
+    const dom = {
+      board: document.getElementById('board'),
+      boardWrap: document.getElementById('board-wrap'),
+      tilesStat: document.getElementById('stat-tiles'),
+      scoreStat: document.getElementById('stat-score'),
+      timeStat: document.getElementById('stat-time'),
+      overlay: document.getElementById('overlay'),
+      modalTitle: document.getElementById('modal-title'),
+      modalSub: document.getElementById('modal-sub'),
+      modalStats: document.getElementById('modal-stats'),
+      seal: document.getElementById('seal'),
+      infoOverlay: document.getElementById('info-overlay'),
+      infoHistory: document.getElementById('info-history'),
+      toast: document.getElementById('toast'),
+    };
+
+    const state = {
+      tiles: [],
+      selected: null,
+      pairs: 0,
+      score: 0,
+      combo: 0,
+      lastMatchTime: 0,
+      startTime: null,
+      timerInterval: null,
+      hintTimeout: null,
+    };
+
+    function tileValue(def) {
+      return TILE_TIER_VALUE[def.suit] ?? 5;
+    }
+
+    /* =========================================================================
+       GAME INTIALIZATION & LAYOUT SHUFFLE
+       ========================================================================= */
+    function newGame() {
+      dom.board.innerHTML = '';
+      state.tiles = [];
+      state.selected = null;
+      state.pairs = 0;
+      state.score = 0;
+      state.combo = 0;
+      state.lastMatchTime = 0;
+      hideOverlay();
+
+      state.tiles = generateSolvableLayout(LAYOUT);
+
+      renderBoard();
+      updateStats();
+      startTimer();
+      toast("Game table prepared. 福");
+    }
+
+    function buildLayoutOnce(positions) {
+      const groups = {};
+      buildDeck().forEach(t => {
+        (groups[t.group] = groups[t.group] || []).push(t);
+      });
+
+      const pairs = [];
+      Object.values(groups).forEach(arr => {
+        for (let i = 0; i + 1 < arr.length; i += 2) {
+          pairs.push([arr[i], arr[i + 1]]);
+        }
+      });
+      shuffleInPlace(pairs);
+
+      const placed = positions.map(pos => ({ ...pos, def: null, uid: null }));
+      const remaining = new Set(placed.map((_, i) => i));
+      let ok = true;
+
+      const assign = (idx, tile) => {
+        placed[idx].def = tile;
+        placed[idx].uid = tile.uid;
+        remaining.delete(idx);
+      };
+
+      for (const [a, b] of pairs) {
+        const freeIdxs = [...remaining].filter(i => isPosFree(i, placed, remaining));
+        if (freeIdxs.length < 2) {
+          ok = false;
+          const [i1, i2] = [...remaining];
+          assign(i1, a);
+          assign(i2, b);
+          continue;
+        }
+        shuffleInPlace(freeIdxs);
+        assign(freeIdxs[0], a);
+        assign(freeIdxs[1], b);
+      }
+      return { tiles: placed, ok };
+    }
+
+    function generateSolvableLayout(positions) {
+      for (let attempt = 0; attempt < 80; attempt++) {
+        const { tiles, ok } = buildLayoutOnce(positions);
+        if (ok) return tiles;
+      }
+      return buildLayoutOnce(positions).tiles;
+    }
+
+    function isPosFree(idx, placed, remaining) {
+      const p = placed[idx];
+      let leftBlocked = false;
+      let rightBlocked = false;
+      for (const otherIdx of remaining) {
+        if (otherIdx === idx) continue;
+        const o = placed[otherIdx];
+        if (o.layer > p.layer && overlaps(p, o)) return false;
+        if (o.layer === p.layer) {
+          if (sideAdjacent(o, p, 'left')) leftBlocked = true;
+          else if (sideAdjacent(o, p, 'right')) rightBlocked = true;
+        }
+      }
+      return !leftBlocked || !rightBlocked;
+    }
+
+    function overlaps(a, b) {
+      return Math.abs(a.row - b.row) < 1 && Math.abs(a.col - b.col) < 1;
+    }
+
+    function sideAdjacent(other, self, side) {
+      if (Math.abs(other.row - self.row) >= 1) return false;
+      const delta = side === 'left' ? -1 : 1;
+      return Math.abs(other.col - (self.col + delta)) < 0.5;
+    }
+
+    /* =========================================================================
+       BOARD INTERACTIVE CHECKS
+       ========================================================================= */
+    function getFreeTiles(tiles = state.tiles) {
+      return tiles.filter(t => isTileFree(t, tiles));
+    }
+
+    function isTileFree(tile, tiles = state.tiles) {
+      for (const o of tiles) {
+        if (o.uid === tile.uid) continue;
+        if (o.layer > tile.layer && overlaps(tile, o)) return false;
+      }
+      let leftBlocked = false;
+      let rightBlocked = false;
+      for (const o of tiles) {
+        if (o.uid === tile.uid) continue;
+        if (o.layer === tile.layer) {
+          if (sideAdjacent(o, tile, 'left')) leftBlocked = true;
+          if (sideAdjacent(o, tile, 'right')) rightBlocked = true;
+        }
+      }
+      return !leftBlocked || !rightBlocked;
+    }
+
+    function tilesMatch(a, b) {
+      if (!a || !b) return false;
+      return a.group === b.group;
+    }
+
+    /* =========================================================================
+       GOLD & VERMILLION GRAPHICAL RENDER ENGINE
+       Defines physical 3D elements and styles beautiful calligraphic glyphs
+       ========================================================================= */
+    function renderBoard() {
+      dom.board.innerHTML = '';
+
+      let minRow = Infinity, maxRow = -Infinity, minCol = Infinity, maxCol = -Infinity;
+      for (const t of state.tiles) {
+        if (t.row < minRow) minRow = t.row;
+        if (t.row + 1 > maxRow) maxRow = t.row + 1;
+        if (t.col < minCol) minCol = t.col;
+        if (t.col + 1 > maxCol) maxCol = t.col + 1;
+      }
+
+      dom.board.style.width = ((maxCol - minCol) * TILE_W + BOARD_MARGIN * 2) + 'px';
+      dom.board.style.height = ((maxRow - minRow) * TILE_H + BOARD_MARGIN * 2) + 'px';
+
+      const sorted = [...state.tiles].sort((a, b) =>
+        a.layer - b.layer || a.row - b.row || a.col - b.col
+      );
+
+      for (const tile of sorted) {
+        tile.el = createTileElement(tile, minRow, minCol);
+        dom.board.appendChild(tile.el);
+      }
+
+      fitBoardToScreen();
+      updateTileStates();
+    }
+
+    function createTileElement(tile, minRow, minCol) {
+      const { layer, row, col, def } = tile;
+
+      const el = document.createElement('div');
+      el.className = 'tile';
+      el.dataset.uid = tile.uid;
+
+      // Realistic layered shadow mapping to add optical 3D height depth per Layer
+      const baseShadowOffset = 1 + layer * 1.5;
+      const shadowBlur = 3 + layer * 2.5;
+      const shadowIntensity = 0.35 + layer * 0.05;
+
+      Object.assign(el.style, {
+        left:      (col - minCol) * TILE_W + layer * LAYER_OFFSET_X + BOARD_MARGIN + 'px',
+        top:       (row - minRow) * TILE_H + layer * LAYER_OFFSET_Y + BOARD_MARGIN + 'px',
+        width:     TILE_W + 'px',
+        height:    TILE_H + 'px',
+        zIndex:    layer * 100 + Math.floor(row * 10) + Math.floor(col),
+        boxShadow: `${baseShadowOffset}px ${baseShadowOffset + 1.5}px ${shadowBlur}px rgba(8, 6, 4, ${shadowIntensity})`,
+      });
+
+      const colorClass = def.color || '';
+      let faceHtml = '';
+
+      // Special traditional layouts
+      if (def.suit === 'char') {
+        // Red calligraphic split for standard characters
+        faceHtml = `
+          <div class="tile-char-num">${def.glyph}</div>
+          <div class="tile-char-wan">萬</div>
+        `;
+      } else if (def.id === 'drag-w') {
+        // Special traditional key-styled blank border layout for White Dragon
+        el.querySelector('.tile-face')?.classList.add('white-dragon'); // set class on load
+        faceHtml = ``;
+      } else {
+        const subLabel = SUIT_LABEL[def.suit] || (SUBLABEL_SUITS.has(def.suit) ? def.sub : '');
+        faceHtml = `
+          <div class="tile-glyph ${colorClass}">${def.glyph}</div>
+          ${subLabel ? `<div class="tile-sub">${subLabel}</div>` : ''}
+        `;
+      }
+
+      const faceVal = def.id === 'drag-w' ? 'white-dragon' : '';
+      el.innerHTML = `
+        <div class="tile-face ${faceVal}">
+          ${faceHtml}
+        </div>
+      `;
+
+      el.addEventListener('click', () => onTileClick(tile));
+      return el;
+    }
+
+    function fitBoardToScreen() {
+      if (!dom.board.style.width) return;
+      const boardW = parseInt(dom.board.style.width);
+      const boardH = parseInt(dom.board.style.height);
+      const inset = window.innerWidth <= 720 ? 10 : 50;
+      const availW = dom.boardWrap.clientWidth - inset;
+      const availH = dom.boardWrap.clientHeight - inset;
+      dom.board.style.zoom = Math.min(availW / boardW, availH / boardH, 2.5);
+    }
+
+    window.addEventListener('resize', fitBoardToScreen);
+
+    /* =========================================================================
+       SATISFYING VECTOR PARTICLE SPILL (GOLD SPARS)
+       Explodes glowing trails dynamically from coordinates of matching tiles
+       ========================================================================= */
+    function createMatchParticles(tileA, tileB) {
+      const elements = [tileA.el, tileB.el];
+      const colors = ['#dfb356', '#b52c16', '#307544', '#fffefb'];
+
+      elements.forEach(el => {
+        if (!el) return;
+        const rect = el.getBoundingClientRect();
+        const centerX = rect.left + rect.width / 2 + window.scrollX;
+        const centerY = rect.top + rect.height / 2 + window.scrollY;
+        
+        const count = 15;
+        for (let i = 0; i < count; i++) {
+          const part = document.createElement('div');
+          part.className = 'spark-particle';
+          const size = Math.random() * 6 + 3;
+          const color = colors[Math.floor(Math.random() * colors.length)];
+          
+          Object.assign(part.style, {
+            left: centerX + 'px',
+            top: centerY + 'px',
+            width: size + 'px',
+            height: size + 'px',
+            backgroundColor: color,
+            boxShadow: `0 0 5px ${color}`,
+            transition: 'all 0.45s cubic-bezier(0.1, 0.8, 0.2, 1)',
+          });
+
+          document.body.appendChild(part);
+
+          const angle = Math.random() * Math.PI * 2;
+          const dist = Math.random() * 45 + 15;
+          const tx = Math.cos(angle) * dist;
+          const ty = Math.sin(angle) * dist;
+
+          // Trigger smooth render transition
+          requestAnimationFrame(() => {
+            part.style.opacity = '0';
+            part.style.transform = `translate(${tx}px, ${ty}px) scale(0)`;
+          });
+
+          setTimeout(() => part.remove(), 500);
+        }
+      });
+    }
+
+    /* =========================================================================
+       PLAY LOGIC & SELECTIONS
+       ========================================================================= */
+    function onTileClick(tile) {
+      if (!isTileFree(tile)) {
+        // Play error shake response or return
+        breakCombo();
+        return;
+      }
+
+      playTileClack();
+
+      if (state.selected && state.selected.uid === tile.uid) {
+        state.selected = null;
+        updateTileStates();
+        return;
+      }
+
+      if (!state.selected) {
+        state.selected = tile;
+        updateTileStates();
+        return;
+      }
+
+      if (tilesMatch(state.selected.def, tile.def)) {
+        handleMatch(state.selected, tile);
+      } else {
+        breakCombo();
+        state.selected = tile;
+        updateTileStates();
+      }
+    }
+
+    function handleMatch(t1, t2) {
+      const now = Date.now();
+      const inWindow = state.lastMatchTime && (now - state.lastMatchTime) <= COMBO_WINDOW_MS;
+      state.combo = inWindow ? state.combo + 1 : 1;
+      state.lastMatchTime = now;
+
+      const points = (tileValue(t1.def) + tileValue(t2.def)) * state.combo;
+      state.score += points;
+      state.pairs++;
+
+      createMatchParticles(t1, t2);
+
+      removeTile(t1);
+      removeTile(t2);
+      state.selected = null;
+
+      if (state.combo >= 2) {
+        toast(`Combo ×${state.combo}! +${points} pts`);
+      }
+
+      updateStats();
+      updateTileStates();
+      checkEndState();
+    }
+
+    function removeTile(tile) {
+      if (tile.el) {
+        tile.el.classList.add('removing');
+        const el = tile.el;
+        setTimeout(() => el.remove(), TILE_REMOVE_MS);
+      }
+      state.tiles = state.tiles.filter(t => t.uid !== tile.uid);
+    }
+
+    function breakCombo() {
+      state.combo = 0;
+      state.lastMatchTime = 0;
+    }
+
+    function updateTileStates() {
+      const selectedUid = state.selected && state.selected.uid;
+      for (const t of state.tiles) {
+        if (!t.el) continue;
+        const free = isTileFree(t);
+        t.el.classList.toggle('free', free);
+        t.el.classList.toggle('blocked', !free);
+        t.el.classList.toggle('selected', t.uid === selectedUid);
+      }
+    }
+
+    function updateStats() {
+      dom.tilesStat.textContent = state.tiles.length;
+      dom.scoreStat.textContent = state.score;
+    }
+
+    /* =========================================================================
+       GAME TIMER ENGINE
+       ========================================================================= */
+    function startTimer() {
+      if (state.timerInterval) clearInterval(state.timerInterval);
+      state.startTime = Date.now();
+      tickTimer();
+      state.timerInterval = setInterval(tickTimer, 1000);
+    }
+
+    function tickTimer() {
+      const elapsed = Math.floor((Date.now() - state.startTime) / 1000);
+      const m = Math.floor(elapsed / 60);
+      const s = String(elapsed % 60).padStart(2, '0');
+      dom.timeStat.textContent = `${m}:${s}`;
+    }
+
+    /* =========================================================================
+       HINTS & SOLVER STATECHECKS
+       ========================================================================= */
+    function findMatchingPair() {
+      const free = getFreeTiles();
+      for (let i = 0; i < free.length; i++) {
+        for (let j = i + 1; j < free.length; j++) {
+          if (tilesMatch(free[i].def, free[j].def)) return [free[i], free[j]];
+        }
+      }
+      return null;
+    }
+
+    function showHint() {
+      breakCombo();
+      const pair = findMatchingPair();
+      if (pair) {
+        flashHint(pair);
+        toast("Path illuminated. ✦");
+      } else {
+        toast("Stalemate! No valid moves remain.");
+      }
+    }
+
+    function flashHint(tiles) {
+      tiles.forEach(t => t.el && t.el.classList.add('hint'));
+      if (state.hintTimeout) clearTimeout(state.hintTimeout);
+      state.hintTimeout = setTimeout(() => {
+        tiles.forEach(t => t.el && t.el.classList.remove('hint'));
+      }, HINT_FLASH_MS);
+    }
+
+    function checkEndState() {
+      if (state.tiles.length === 0) {
+        clearInterval(state.timerInterval);
+        showOverlay('win');
+        return;
+      }
+      if (!findMatchingPair()) {
+        clearInterval(state.timerInterval);
+        showOverlay('lose');
+      }
+    }
+
+    /* =========================================================================
+       HIGH SCORE RECORD PERSISTENCY (LOCAL STORAGE)
+       ========================================================================= */
+    function loadHistory() {
+      try {
+        const raw = localStorage.getItem(HISTORY_KEY);
+        if (!raw) return [];
+        const parsed = JSON.parse(raw);
+        return Array.isArray(parsed) ? parsed : [];
+      } catch {
+        return [];
+      }
+    }
+
+    function saveHistory(history) {
+      try {
+        localStorage.setItem(HISTORY_KEY, JSON.stringify(history));
+      } catch {
+        // fails silently on private browser layers
+      }
+    }
+
+    function recordResult(entry) {
+      const history = loadHistory();
+      const saved = { ...entry, id: Date.now() + '-' + Math.random().toString(36).slice(2, 7) };
+      history.unshift(saved);
+      history.length = Math.min(history.length, MAX_HISTORY);
+      saveHistory(history);
+      return saved;
+    }
+
+    function formatTime(seconds) {
+      const m = Math.floor(seconds / 60);
+      const s = String(seconds % 60).padStart(2, '0');
+      return `${m}:${s}`;
+    }
+
+    function renderHistory(highlightId) {
+      const history = loadHistory();
+      if (history.length === 0) {
+        return `<div class="history-empty">No historic matches registered on table.</div>`;
+      }
+      const rows = history.map((h, i) => {
+        const cur = h.id === highlightId ? ' current' : '';
+        const outcome = h.won ? '勝' : '·';
+        const outcomeClass = h.won ? 'won' : '';
+        return `
+          <div class="history-row${cur}">
+            <span class="history-rank">${i + 1}</span>
+            <span class="history-outcome ${outcomeClass}">${outcome}</span>
+            <span class="history-score">${h.score}</span>
+            <span class="history-meta">${formatTime(h.elapsed)} · ${h.pairs} pairs</span>
+          </div>
+        `;
+      }).join('');
+      return `<div class="history-list">${rows}</div>`;
+    }
+
+    /* =========================================================================
+       ALERT & RULES MODAL INTERACTIONS
+       ========================================================================= */
+    function showOverlay(kind) {
+      const win = kind === 'win';
+      dom.modalTitle.textContent = win ? '勝利' : '無路';
+      dom.modalSub.textContent = win ? 'Victory' : 'No Moves Remain';
+      dom.seal.textContent = win ? '福' : '緣';
+
+      const elapsed = Math.floor((Date.now() - state.startTime) / 1000);
+
+      const earned = state.score;
+      const penalty = elapsed * TIME_PENALTY_PER_SEC;
+      const bonus = win ? COMPLETION_BONUS : 0;
+      const finalScore = Math.max(0, earned - penalty + bonus);
+
+      const saved = recordResult({
+        score: finalScore,
+        won: win,
+        elapsed,
+        pairs: state.pairs,
+        when: Date.now(),
+      });
+
+      dom.modalStats.innerHTML = `
+        <div class="stat">
+          <div class="stat-label">Final Game Score</div>
+          <div class="stat-value final-score">${finalScore}</div>
+        </div>
+        <div class="score-breakdown">
+          <div class="row"><span>POINTS EARNED</span><span>+${earned}</span></div>
+          <div class="row"><span>TIME PENALTY</span><span>−${penalty}</span></div>
+          ${bonus ? `<div class="row bonus"><span>COMPLETION BONUS</span><span>+${bonus}</span></div>` : ''}
+          <div class="row totals">PAIRS MATCHED: ${state.pairs} · ELAPSED: ${formatTime(elapsed)}</div>
+        </div>
+        <div class="history-block">
+          <div class="history-title">Recent Matches</div>
+          ${renderHistory(saved.id)}
+        </div>
+      `;
+
+      dom.overlay.classList.add('show');
+    }
+
+    function hideOverlay() { dom.overlay.classList.remove('show'); }
+    function showInfo() {
+      dom.infoHistory.innerHTML = renderHistory();
+      dom.infoOverlay.classList.add('show');
+    }
+    function hideInfo()    { dom.infoOverlay.classList.remove('show'); }
+
+    let toastTimeout = null;
+    function toast(msg) {
+      dom.toast.textContent = msg;
+      dom.toast.classList.add('show');
+      if (toastTimeout) clearTimeout(toastTimeout);
+      toastTimeout = setTimeout(() => dom.toast.classList.remove('show'), TOAST_MS);
+    }
+
+    /* =========================================================================
+       BUTTON CONTROLLER BINDINGS
+       ========================================================================= */
+    const on = (id, handler) => document.getElementById(id).addEventListener('click', handler);
+
+    on('btn-new',        newGame);
+    on('btn-modal-new',  newGame);
+    on('btn-hint',       showHint);
+    on('btn-info',       showInfo);
+    on('btn-info-close', hideInfo);
+
+    dom.infoOverlay.addEventListener('click', e => {
+      if (e.target === dom.infoOverlay) hideInfo();
+    });
+
+    const highlightBtn = document.getElementById('btn-glow');
+    highlightBtn.addEventListener('click', () => {
+      const enabled = dom.board.classList.toggle('distinguish');
+      highlightBtn.classList.toggle('active', enabled);
+    });
+
+    // Fire initial game setup
+    newGame();
+  </script>
+</body>
+</html>

@@ -1,0 +1,6 @@
+{
+  "name": "Mahjong Solitaire",
+  "description": "A beautiful, premium traditional Mahjong Solitaire matching game with a rich 3D ivory-and-jade design.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

@@ -30,6 +30,7 @@
       --ink-dark: #14110e;
       --ink-soft: #383129;
       --blue-indigo: #163c66;
+      --gold-glow: rgba(223, 179, 86, 0.4);
       --tile-shadow: rgba(8, 6, 4, 0.45);
     }
 
@@ -279,11 +280,14 @@
     .tile {
       position: absolute;
       /* Jade body gradient */
+      background-color: var(--jade-dark);
       background: linear-gradient(145deg, var(--jade-light) 0%, var(--jade-mid) 40%, var(--jade-dark) 100%);
       border-radius: 5px;
       cursor: pointer;
       transition: transform 0.16s cubic-bezier(0.2, 0.8, 0.2, 1), box-shadow 0.16s cubic-bezier(0.2, 0.8, 0.2, 1), filter 0.25s ease;
       border: 1px solid rgba(0, 0, 0, 0.5);
+      /* Ensure opacity is forced to 1 to prevent issues on some mobile browsers */
+      opacity: 1 !important;
     }
 
     /* The Ivory Piece Plate (Layered beautifully on top with gold boundary) */
@@ -295,6 +299,7 @@
       right: 5px;   /* Expose deep jade on the right edge */
       bottom: 7px; /* Expose deep jade on the bottom edge */
       /* Authentic aged ivory silk sheen */
+      background-color: var(--ivory-base);
       background: linear-gradient(135deg, var(--ivory-top) 0%, #fbf5e2 75%, var(--ivory-base) 100%);
       border-radius: 4px 2px 2px 4px;
       box-shadow: 
@@ -411,8 +416,10 @@
     /* Soft-dim mode for blocked tiles so playable choices emerge cleanly */
     .board.distinguish .tile.blocked {
       filter: saturate(0.55) brightness(0.68);
+      background-color: #0c1a10;
     }
     .board.distinguish .tile.blocked::before {
+      background-color: #dbd0b6;
       background: linear-gradient(135deg, #efeae0 0%, #dbd0b6 100%);
     }
 
@@ -1460,7 +1467,9 @@
       const inset = window.innerWidth <= 720 ? 10 : 50;
       const availW = dom.boardWrap.clientWidth - inset;
       const availH = dom.boardWrap.clientHeight - inset;
-      dom.board.style.zoom = Math.min(availW / boardW, availH / boardH, 2.5);
+      
+      const scale = Math.min(availW / boardW, availH / boardH, 2.5);
+      dom.board.style.transform = `scale(${scale})`;
     }
 
     window.addEventListener('resize', fitBoardToScreen);

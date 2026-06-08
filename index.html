@@ -48,13 +48,21 @@
 
     body {
       font-family: 'Cormorant Garamond', serif;
-      /* Gorgeous velvet-felt table texture with subtle radial light reflection */
-      background:
-        radial-gradient(circle at 50% 45%, var(--felt-light) 0%, var(--felt-dark) 100%);
+      background-color: var(--felt-dark);
+      background: radial-gradient(circle at 50% 45%, var(--felt-light) 0%, var(--felt-dark) 100%);
       color: var(--ivory-top);
       position: relative;
       user-select: none;
       -webkit-user-select: none;
+    }
+
+    @media (max-width: 720px) {
+      body {
+        background: var(--felt-dark) !important;
+      }
+      body::before {
+        display: none !important;
+      }
     }
 
     /* Elegant velvet fabric texturing overlay */
@@ -271,79 +279,47 @@
     .board {
       position: relative;
       transform-origin: center center;
+      will-change: transform;
     }
 
     /* =========================================================================
-       THE MASTERPIECE 3D TILE DESIGN
-       Real Chinese dual-layer design: Ivory Bone face + Green Imperial Jade back
+       THE MASTERPIECE TILE DESIGN
+       Robust design for mobile: solid backgrounds to prevent transparency bugs.
        ========================================================================= */
     .tile {
       position: absolute;
-      /* Jade body gradient: Imperial Jade backplate */
-      background-color: var(--jade-dark) !important;
-      background: linear-gradient(145deg, var(--jade-light) 0%, var(--jade-mid) 40%, var(--jade-dark) 100%) !important;
-      border-radius: 5px;
-      transition: transform 0.16s cubic-bezier(0.2, 0.8, 0.2, 1), box-shadow 0.16s cubic-bezier(0.2, 0.8, 0.2, 1);
-      border: 1px solid rgba(0, 0, 0, 0.5);
-      /* Force opacity to 1 to fix specific mobile browser rendering issues */
+      background: #122c19 !important; /* Solid Jade Green Base */
+      border-radius: 4px;
+      border: 1px solid #000000;
       opacity: 1 !important;
-      transform: translate3d(0, 0, 0);
-      will-change: transform;
-      -webkit-backface-visibility: hidden;
-      backface-visibility: hidden;
+      visibility: visible !important;
     }
 
     .tile.free { cursor: pointer; }
     .tile.blocked { cursor: not-allowed; }
 
-    /* The Ivory Piece Plate (Layered on top with gold boundary) */
-    .tile::before {
-      content: '';
-      position: absolute;
-      top: 0; left: 0;
-      right: 5px;   /* Expose deep jade on the right edge */
-      bottom: 7px; /* Expose deep jade on the bottom edge */
-      /* Authentic aged ivory silk sheen */
-      background-color: var(--ivory-base) !important;
-      background: linear-gradient(135deg, var(--ivory-top) 0%, #fbf5e2 75%, var(--ivory-base) 100%) !important;
-      border-radius: 4px 2px 2px 4px;
-      box-shadow: 
-        inset 0 1px 0px rgba(255,255,255,0.85),
-        inset 1px 0px 0px rgba(255,255,255,0.6),
-        /* Subtle gold seam line where organic bone meets hand-carved jade */
-        0 2px 0px var(--gold-dim);
-      pointer-events: none;
-      z-index: 1;
-      opacity: 1 !important;
-      display: block !important;
-    }
-
     /* The functional surface containing the glyph designs */
     .tile-face {
       position: absolute;
       top: 0; left: 0;
-      right: 5px; bottom: 7px;
+      right: 4px; bottom: 6px; /* Expose jade on right/bottom */
+      background: #ffffff !important; /* Solid White Face */
       display: flex;
       flex-direction: column;
       align-items: center;
       justify-content: center;
       z-index: 2;
       line-height: 1;
-      padding: 2px 3px;
+      border-radius: 3px 2px 2px 3px;
       pointer-events: none;
     }
 
-    /* Real carved-in chisel effect on glyph representations */
     .tile-glyph {
       font-family: 'Noto Serif SC', serif;
-      font-size: 27px;
+      font-size: 28px;
       font-weight: 700;
-      color: var(--ink-dark);
-      /* Subtle white bottom light & dark top shadow mimics real physical carving indentation */
-      text-shadow: 
-        -0.5px -0.5px 0.5px rgba(0, 0, 0, 0.3), 
-        0.5px 0.5px 0.5px rgba(255, 255, 255, 0.9);
-      backface-visibility: hidden;
+      color: #000000 !important;
+      text-shadow: none;
       -webkit-font-smoothing: antialiased;
     }
 
@@ -1452,14 +1428,8 @@
       
       const scale = Math.min(availW / boardW, availH / boardH, 2.5);
       
-      // Use zoom for Chrome/Safari mobile engines if possible as it handles layout better
-      if ('zoom' in document.body.style && window.innerWidth <= 720) {
-        dom.board.style.zoom = scale;
-        dom.board.style.transform = 'translate3d(0,0,0)';
-      } else {
-        dom.board.style.transform = `scale(${scale}) translate3d(0,0,0)`;
-        dom.board.style.transformOrigin = 'center center';
-      }
+      dom.board.style.transform = `scale(${scale})`;
+      dom.board.style.transformOrigin = 'center center';
     }
 
     window.addEventListener('resize', fitBoardToScreen);

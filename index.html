@@ -279,28 +279,33 @@
        ========================================================================= */
     .tile {
       position: absolute;
-      /* Jade body gradient */
-      background-color: var(--jade-dark);
-      background: linear-gradient(145deg, var(--jade-light) 0%, var(--jade-mid) 40%, var(--jade-dark) 100%);
+      /* Jade body gradient: Imperial Jade backplate */
+      background-color: var(--jade-dark) !important;
+      background: linear-gradient(145deg, var(--jade-light) 0%, var(--jade-mid) 40%, var(--jade-dark) 100%) !important;
       border-radius: 5px;
-      cursor: pointer;
-      transition: transform 0.16s cubic-bezier(0.2, 0.8, 0.2, 1), box-shadow 0.16s cubic-bezier(0.2, 0.8, 0.2, 1), filter 0.25s ease;
+      transition: transform 0.16s cubic-bezier(0.2, 0.8, 0.2, 1), box-shadow 0.16s cubic-bezier(0.2, 0.8, 0.2, 1);
       border: 1px solid rgba(0, 0, 0, 0.5);
-      /* Ensure opacity is forced to 1 to prevent issues on some mobile browsers */
+      /* Force opacity to 1 to fix specific mobile browser rendering issues */
       opacity: 1 !important;
+      transform: translate3d(0, 0, 0);
+      will-change: transform;
+      -webkit-backface-visibility: hidden;
+      backface-visibility: hidden;
     }
 
-    /* The Ivory Piece Plate (Layered beautifully on top with gold boundary) */
+    .tile.free { cursor: pointer; }
+    .tile.blocked { cursor: not-allowed; }
+
+    /* The Ivory Piece Plate (Layered on top with gold boundary) */
     .tile::before {
       content: '';
       position: absolute;
-      top: 0;
-      left: 0;
+      top: 0; left: 0;
       right: 5px;   /* Expose deep jade on the right edge */
       bottom: 7px; /* Expose deep jade on the bottom edge */
       /* Authentic aged ivory silk sheen */
-      background-color: var(--ivory-base);
-      background: linear-gradient(135deg, var(--ivory-top) 0%, #fbf5e2 75%, var(--ivory-base) 100%);
+      background-color: var(--ivory-base) !important;
+      background: linear-gradient(135deg, var(--ivory-top) 0%, #fbf5e2 75%, var(--ivory-base) 100%) !important;
       border-radius: 4px 2px 2px 4px;
       box-shadow: 
         inset 0 1px 0px rgba(255,255,255,0.85),
@@ -309,21 +314,20 @@
         0 2px 0px var(--gold-dim);
       pointer-events: none;
       z-index: 1;
+      opacity: 1 !important;
+      display: block !important;
     }
 
     /* The functional surface containing the glyph designs */
     .tile-face {
       position: absolute;
-      top: 0;
-      left: 0;
-      right: 5px;
-      bottom: 7px;
+      top: 0; left: 0;
+      right: 5px; bottom: 7px;
       display: flex;
       flex-direction: column;
       align-items: center;
       justify-content: center;
       z-index: 2;
-      text-align: center;
       line-height: 1;
       padding: 2px 3px;
       pointer-events: none;
@@ -339,24 +343,18 @@
       text-shadow: 
         -0.5px -0.5px 0.5px rgba(0, 0, 0, 0.3), 
         0.5px 0.5px 0.5px rgba(255, 255, 255, 0.9);
+      backface-visibility: hidden;
+      -webkit-font-smoothing: antialiased;
     }
 
     /* Color styles matching the rich calligraphic ink tradition */
-    .tile-glyph.red { 
-      color: var(--vermillion); 
-      text-shadow: -0.5px -0.5px 0.5px rgba(0, 0, 0, 0.4), 0.5px 0.5px 0.5px rgba(255, 255, 255, 0.9);
-    }
-    .tile-glyph.green { 
-      color: var(--jade-mid); 
-      text-shadow: -0.5px -0.5px 0.5px rgba(0, 0, 0, 0.4), 0.5px 0.5px 0.5px rgba(255, 255, 255, 0.9);
-    }
-    .tile-glyph.blue { 
-      color: var(--blue-indigo); 
+    .tile-glyph.red { color: var(--vermillion); }
+    .tile-glyph.green { color: var(--jade-mid); }
+    .tile-glyph.blue { color: var(--blue-indigo); }
+    .tile-glyph.gold { color: var(--gold-dim); }
+
+    .tile-glyph {
       text-shadow: -0.5px -0.5px 0.5px rgba(0, 0, 0, 0.35), 0.5px 0.5px 0.5px rgba(255, 255, 255, 0.9);
-    }
-    .tile-glyph.gold { 
-      color: var(--gold-dim); 
-      text-shadow: -0.5px -0.5px 0.5px rgba(0, 0, 0, 0.4), 0.5px 0.5px 0.5px rgba(255, 255, 255, 0.9);
     }
 
     /* Special Character split styling */
@@ -405,25 +403,7 @@
       opacity: 0.85;
     }
 
-    /* Interactive physics reactions */
-    .tile.free {
-      cursor: pointer;
-    }
-    .tile.blocked {
-      cursor: not-allowed;
-    }
-
-    /* Soft-dim mode for blocked tiles so playable choices emerge cleanly */
-    .board.distinguish .tile.blocked {
-      filter: saturate(0.55) brightness(0.68);
-      background-color: #0c1a10;
-    }
-    .board.distinguish .tile.blocked::before {
-      background-color: #dbd0b6;
-      background: linear-gradient(135deg, #efeae0 0%, #dbd0b6 100%);
-    }
-
-    /* Hover Lift Effect */
+    /* Hover Lift Effect for free tiles */
     .tile.free:not(.selected):hover {
       transform: translate(-2px, -3px);
       filter: brightness(1.04);
@@ -858,16 +838,20 @@
        RESPONSIVENESS & SCALES
        ========================================================================= */
     @media (max-width: 720px) {
-      .app { padding: 12px 12px 6px; }
-      .board-wrap { padding: 4px 0; }
+      .app { padding: 10px 12px 6px; }
+      .board-wrap { padding: 0; }
       header {
-        grid-template-columns: 1fr;
+        grid-template-columns: 1.2fr 0.8fr;
         grid-template-rows: auto auto;
-        gap: 8px;
-        padding-bottom: 8px;
+        gap: 6px;
+        padding-bottom: 6px;
       }
-      .title-block { order: -1; }
-      .title-cn { font-size: 26px; letter-spacing: 6px; }
+      .title-block { 
+        grid-column: 1 / span 2;
+        grid-row: 1;
+        margin-bottom: 4px;
+      }
+      .title-cn { font-size: 28px; letter-spacing: 6px; }
       .title-en { font-size: 10px; letter-spacing: 2px; }
       .header-left {
         grid-row: 2;
@@ -877,14 +861,14 @@
       }
       .header-right {
         grid-row: 2;
-        grid-column: 1;
-        justify-self: end;
+        grid-column: 2;
+        justify-content: flex-end;
         gap: 4px;
       }
-      .stat { padding: 0 6px; }
-      .stat-value { font-size: 18px; }
-      .stat-label { font-size: 7px; letter-spacing: 1px; }
-      button.btn { padding: 4px 8px; font-size: 12px; letter-spacing: 0.5px; }
+      .stat { padding: 0 4px; }
+      .stat-value { font-size: 20px; }
+      .stat-label { font-size: 8px; letter-spacing: 0.5px; }
+      button.btn { padding: 5px 8px; font-size: 13px; letter-spacing: 0px; }
       .modal { padding: 24px 20px; }
       .modal-title { font-size: 26px; letter-spacing: 5px; }
     }
@@ -929,8 +913,6 @@
       </div>
 
       <div class="header-right">
-        <!-- Highlight toggle dims blocked tiles so playable ones glow -->
-        <button class="btn active" id="btn-glow" title="Deselect or dim blocked tiles so free ones stand out">Highlight</button>
         <button class="btn" id="btn-hint">Hint</button>
         <button class="btn" id="btn-info" title="How scoring works">Rules</button>
         <button class="btn primary" id="btn-new">New Game</button>
@@ -938,7 +920,7 @@
     </header>
 
     <div class="board-wrap" id="board-wrap">
-      <div class="board distinguish" id="board"></div>
+      <div class="board" id="board"></div>
     </div>
   </div>
 
@@ -1464,12 +1446,20 @@
       if (!dom.board.style.width) return;
       const boardW = parseInt(dom.board.style.width);
       const boardH = parseInt(dom.board.style.height);
-      const inset = window.innerWidth <= 720 ? 10 : 50;
+      const inset = window.innerWidth <= 720 ? 10 : 80;
       const availW = dom.boardWrap.clientWidth - inset;
       const availH = dom.boardWrap.clientHeight - inset;
       
       const scale = Math.min(availW / boardW, availH / boardH, 2.5);
-      dom.board.style.transform = `scale(${scale})`;
+      
+      // Use zoom for Chrome/Safari mobile engines if possible as it handles layout better
+      if ('zoom' in document.body.style && window.innerWidth <= 720) {
+        dom.board.style.zoom = scale;
+        dom.board.style.transform = 'translate3d(0,0,0)';
+      } else {
+        dom.board.style.transform = `scale(${scale}) translate3d(0,0,0)`;
+        dom.board.style.transformOrigin = 'center center';
+      }
     }
 
     window.addEventListener('resize', fitBoardToScreen);
@@ -1802,12 +1792,6 @@
 
     dom.infoOverlay.addEventListener('click', e => {
       if (e.target === dom.infoOverlay) hideInfo();
-    });
-
-    const highlightBtn = document.getElementById('btn-glow');
-    highlightBtn.addEventListener('click', () => {
-      const enabled = dom.board.classList.toggle('distinguish');
-      highlightBtn.classList.toggle('active', enabled);
     });
 
     // Fire initial game setup

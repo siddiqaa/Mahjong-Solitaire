@@ -107,6 +107,7 @@
       position: relative;
       z-index: 4;
       height: 100vh;
+      height: 100dvh;
       display: flex;
       flex-direction: column;
       padding: 24px 32px 18px;
@@ -273,12 +274,14 @@
       justify-content: center;
       overflow: hidden;
       position: relative;
-      padding: 10px 0;
     }
 
     .board {
-      position: relative;
+      position: absolute;
+      left: 50%;
+      top: 50%;
       transform-origin: center center;
+      transform: translate(-50%, -50%) scale(1);
       will-change: transform;
     }
 
@@ -1360,7 +1363,7 @@
         dom.board.appendChild(tile.el);
       }
 
-      fitBoardToScreen();
+      requestAnimationFrame(fitBoardToScreen);
       updateTileStates();
     }
 
@@ -1422,14 +1425,12 @@
       if (!dom.board.style.width) return;
       const boardW = parseInt(dom.board.style.width);
       const boardH = parseInt(dom.board.style.height);
-      const inset = window.innerWidth <= 720 ? 10 : 80;
+      const inset = window.innerWidth <= 720 ? 16 : 60;
       const availW = dom.boardWrap.clientWidth - inset;
       const availH = dom.boardWrap.clientHeight - inset;
       
-      const scale = Math.min(availW / boardW, availH / boardH, 2.5);
-      
-      dom.board.style.transform = `scale(${scale})`;
-      dom.board.style.transformOrigin = 'center center';
+      const scale = Math.min(availW / boardW, availH / boardH, 2.0);
+      dom.board.style.transform = `translate(-50%, -50%) scale(${scale})`;
     }
 
     window.addEventListener('resize', fitBoardToScreen);

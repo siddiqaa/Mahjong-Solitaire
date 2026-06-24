@@ -32,6 +32,14 @@
       --blue-indigo: #163c66;
       --gold-glow: rgba(223, 179, 86, 0.4);
       --tile-shadow: rgba(8, 6, 4, 0.45);
+
+      /* Suit-based tints */
+      --suit-dot: #e6f2ff;
+      --suit-bam: #e6ffe6;
+      --suit-char: #fff5e6;
+      --suit-wind: #f0f0f5;
+      --suit-dragon: #ffefef;
+      --suit-bonus: #fff9e6;
     }
 
     * {
@@ -291,12 +299,18 @@
        ========================================================================= */
     .tile {
       position: absolute;
-      background: #122c19 !important; /* Solid Jade Green Base */
+      background: var(--jade-dark) !important;
       border-radius: 4px;
-      border: 1px solid #000000;
+      border: 1px solid rgba(0,0,0,0.5);
       opacity: 1 !important;
       visibility: visible !important;
+      transition: box-shadow 0.2s ease, filter 0.2s ease, background 0.2s ease;
     }
+
+    /* Traditional Layered "Sandwich" aesthetic: Jade base, Ivory face */
+    .tile.layer-0, .tile.layer-1 { background: var(--jade-dark) !important; }
+    .tile.layer-2, .tile.layer-3 { background: var(--vermillion-deep) !important; }
+    .tile.layer-4 { background: var(--gold-dim) !important; }
 
     .tile.free { cursor: pointer; }
     .tile.blocked { cursor: not-allowed; }
@@ -305,23 +319,35 @@
     .tile-face {
       position: absolute;
       top: 0; left: 0;
-      right: 4px; bottom: 6px; /* Expose jade on right/bottom */
-      background: #ffffff !important; /* Solid White Face */
+      right: 4px; bottom: 6px; /* Expose base color on right/bottom */
+      background: linear-gradient(135deg, var(--ivory-top) 0%, #f9f6ef 100%) !important;
       display: flex;
       flex-direction: column;
       align-items: center;
       justify-content: center;
       z-index: 2;
       line-height: 1;
-      border-radius: 3px 2px 2px 3px;
+      border-radius: 3px 1px 1px 3px;
       pointer-events: none;
+      box-shadow: 
+        inset -1px -1px 2px rgba(0,0,0,0.08), 
+        inset 1px 1px 1px rgba(255,255,255,0.9);
     }
+
+    /* Traditional Suit-Based Face Tinting - subtle elegant gradients */
+    .tile-face.suit-dot    { background: linear-gradient(135deg, var(--ivory-top) 0%, var(--suit-dot) 100%) !important; }
+    .tile-face.suit-bam    { background: linear-gradient(135deg, var(--ivory-top) 0%, var(--suit-bam) 100%) !important; }
+    .tile-face.suit-char   { background: linear-gradient(135deg, var(--ivory-top) 0%, var(--suit-char) 100%) !important; }
+    .tile-face.suit-wind   { background: linear-gradient(135deg, var(--ivory-top) 0%, var(--suit-wind) 100%) !important; }
+    .tile-face.suit-dragon { background: linear-gradient(135deg, var(--ivory-top) 0%, var(--suit-dragon) 100%) !important; }
+    .tile-face.suit-flower, 
+    .tile-face.suit-season { background: linear-gradient(135deg, var(--ivory-top) 0%, var(--suit-bonus) 100%) !important; }
 
     .tile-glyph {
       font-family: 'Noto Serif SC', serif;
       font-size: 28px;
       font-weight: 700;
-      color: #000000 !important;
+      color: #000000;
       text-shadow: none;
       -webkit-font-smoothing: antialiased;
     }
@@ -382,19 +408,22 @@
       opacity: 0.85;
     }
 
-    /* Hover Lift Effect for free tiles */
+    /* Subtle brighten for free tiles on hover */
     .tile.free:not(.selected):hover {
-      transform: translate(-2px, -3px);
-      filter: brightness(1.04);
+      filter: brightness(1.1);
     }
 
-    /* Physical 3D Selection state: Lifts up and casts a wider shadow */
+    /* Selection state: Highlight face and add glow */
+    .tile.selected .tile-face {
+      background: var(--gold-glow) !important;
+      box-shadow: inset 0 0 0 2px var(--gold);
+    }
+
     .tile.selected {
-      transform: translate(-3px, -5px);
       box-shadow:
         0 0 0 1px var(--gold),
-        0px 0px 15px var(--gold-glow),
-        4px 6px 14px rgba(0, 0, 0, 0.65) !important;
+        0px 0px 20px var(--gold-glow),
+        2px 3px 8px rgba(0, 0, 0, 0.5) !important;
     }
 
     /* Sparkling matching hint animations */
@@ -421,13 +450,14 @@
       animation: tileVanish 0.35s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
       pointer-events: none;
       box-shadow: none !important;
+      transition: none !important;
     }
     .tile.removing::before {
       display: none;
     }
 
     @keyframes tileVanish {
-      0% { transform: scale(1) translate(0, 0); opacity: 1; }
+      0% { opacity: 1; }
       40% { transform: scale(1.15) translate(-4px, -6px); opacity: 0.8; }
       100% { transform: scale(0.1) rotate(15deg); opacity: 0; }
     }
@@ -1027,9 +1057,7 @@
        MATH & COLLECTION HELPERS
        ========================================================================= */
     function range(a, b) {
-      const r = [];
-      for (let i = a; i <= b; i++) r.push(i);
-      return r;
+      return Array.from({ length: b - a + 1 }, (_, i) => a + i);
     }
 
     function shuffleInPlace(arr) {
@@ -1037,6 +1065,23 @@
         const j = Math.floor(Math.random() * (i + 1));
         [arr[i], arr[j]] = [arr[j], arr[i]];
       }
+    }
+
+    function overlaps(a, b) {
+      return Math.abs(a.row - b.row) < 1 && Math.abs(a.col - b.col) < 1;
+    }
+
+    function isBlocked(p, list) {
+      let left = false, right = false;
+      for (const o of list) {
+        if (o === p || (o.uid && o.uid === p.uid)) continue;
+        if (o.layer > p.layer && overlaps(p, o)) return { blocked: true };
+        if (o.layer === p.layer && Math.abs(o.row - p.row) < 1) {
+          if (Math.abs(o.col - (p.col - 1)) < 0.5) left = true;
+          if (Math.abs(o.col - (p.col + 1)) < 0.5) right = true;
+        }
+      }
+      return { blocked: left && right };
     }
 
     /* =========================================================================
@@ -1278,28 +1323,9 @@
 
     function isPosFree(idx, placed, remaining) {
       const p = placed[idx];
-      let leftBlocked = false;
-      let rightBlocked = false;
-      for (const otherIdx of remaining) {
-        if (otherIdx === idx) continue;
-        const o = placed[otherIdx];
-        if (o.layer > p.layer && overlaps(p, o)) return false;
-        if (o.layer === p.layer) {
-          if (sideAdjacent(o, p, 'left')) leftBlocked = true;
-          else if (sideAdjacent(o, p, 'right')) rightBlocked = true;
-        }
-      }
-      return !leftBlocked || !rightBlocked;
-    }
-
-    function overlaps(a, b) {
-      return Math.abs(a.row - b.row) < 1 && Math.abs(a.col - b.col) < 1;
-    }
-
-    function sideAdjacent(other, self, side) {
-      if (Math.abs(other.row - self.row) >= 1) return false;
-      const delta = side === 'left' ? -1 : 1;
-      return Math.abs(other.col - (self.col + delta)) < 0.5;
+      const list = [...remaining].map(i => placed[i]);
+      const res = isBlocked(p, list);
+      return !res.blocked;
     }
 
     /* =========================================================================
@@ -1310,20 +1336,7 @@
     }
 
     function isTileFree(tile, tiles = state.tiles) {
-      for (const o of tiles) {
-        if (o.uid === tile.uid) continue;
-        if (o.layer > tile.layer && overlaps(tile, o)) return false;
-      }
-      let leftBlocked = false;
-      let rightBlocked = false;
-      for (const o of tiles) {
-        if (o.uid === tile.uid) continue;
-        if (o.layer === tile.layer) {
-          if (sideAdjacent(o, tile, 'left')) leftBlocked = true;
-          if (sideAdjacent(o, tile, 'right')) rightBlocked = true;
-        }
-      }
-      return !leftBlocked || !rightBlocked;
+      return !isBlocked(tile, tiles).blocked;
     }
 
     function tilesMatch(a, b) {
@@ -1337,14 +1350,17 @@
        ========================================================================= */
     function renderBoard() {
       dom.board.innerHTML = '';
+      if (!state.tiles || state.tiles.length === 0) return;
 
       let minRow = Infinity, maxRow = -Infinity, minCol = Infinity, maxCol = -Infinity;
       for (const t of state.tiles) {
-        if (t.row < minRow) minRow = t.row;
-        if (t.row + 1 > maxRow) maxRow = t.row + 1;
-        if (t.col < minCol) minCol = t.col;
-        if (t.col + 1 > maxCol) maxCol = t.col + 1;
+        minRow = Math.min(minRow, t.row);
+        maxRow = Math.max(maxRow, t.row + 1);
+        minCol = Math.min(minCol, t.col);
+        maxCol = Math.max(maxCol, t.col + 1);
       }
+
+      if (minRow === Infinity) return;
 
       dom.board.style.width = ((maxCol - minCol) * TILE_W + BOARD_MARGIN * 2) + 'px';
       dom.board.style.height = ((maxRow - minRow) * TILE_H + BOARD_MARGIN * 2) + 'px';
@@ -1353,10 +1369,12 @@
         a.layer - b.layer || a.row - b.row || a.col - b.col
       );
 
+      const fragment = document.createDocumentFragment();
       for (const tile of sorted) {
         tile.el = createTileElement(tile, minRow, minCol);
-        dom.board.appendChild(tile.el);
+        fragment.appendChild(tile.el);
       }
+      dom.board.appendChild(fragment);
 
       requestAnimationFrame(fitBoardToScreen);
       updateTileStates();
@@ -1366,7 +1384,7 @@
       const { layer, row, col, def } = tile;
 
       const el = document.createElement('div');
-      el.className = 'tile';
+      el.className = `tile layer-${layer}`;
       el.dataset.uid = tile.uid;
 
       // Realistic layered shadow mapping to add optical 3D height depth per Layer
@@ -1394,9 +1412,7 @@
           <div class="tile-char-wan">萬</div>
         `;
       } else if (def.id === 'drag-w') {
-        // Special traditional key-styled blank border layout for White Dragon
-        el.querySelector('.tile-face')?.classList.add('white-dragon'); // set class on load
-        faceHtml = ``;
+        faceHtml = '';
       } else {
         const subLabel = SUIT_LABEL[def.suit] || (SUBLABEL_SUITS.has(def.suit) ? def.sub : '');
         faceHtml = `
@@ -1406,8 +1422,9 @@
       }
 
       const faceVal = def.id === 'drag-w' ? 'white-dragon' : '';
+      const suitClass = `suit-${def.suit}`;
       el.innerHTML = `
-        <div class="tile-face ${faceVal}">
+        <div class="tile-face ${faceVal} ${suitClass}">
           ${faceHtml}
         </div>
       `;

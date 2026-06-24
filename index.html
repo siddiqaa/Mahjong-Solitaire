@@ -204,6 +204,11 @@
       margin-top: 1px;
       font-variant-numeric: tabular-nums;
       text-shadow: 0 1px 2px rgba(0,0,0,0.4);
+      transition: color 0.3s, text-shadow 0.3s;
+    }
+    .stat-value.active {
+      color: #ffcc00;
+      text-shadow: 0 0 10px rgba(255, 204, 0, 0.4), 0 1px 2px rgba(0,0,0,0.4);
     }
 
     .header-right {
@@ -424,6 +429,17 @@
         0 0 0 1px var(--gold),
         0px 0px 20px var(--gold-glow),
         2px 3px 8px rgba(0, 0, 0, 0.5) !important;
+    }
+
+    /* Blocked Feedback */
+    @keyframes shake {
+      0%, 100% { transform: translateX(0); }
+      25% { transform: translateX(-3px); }
+      75% { transform: translateX(3px); }
+    }
+    .tile.blocked-shake {
+      animation: shake 0.2s cubic-bezier(.36,.07,.19,.97) both;
+      filter: grayscale(0.5) brightness(0.8);
     }
 
     /* Sparkling matching hint animations */
@@ -914,6 +930,10 @@
           <div class="stat-label">Time</div>
           <div class="stat-value" id="stat-time">0:00</div>
         </div>
+        <div class="stat">
+          <div class="stat-label">Streak</div>
+          <div class="stat-value streak-val" id="stat-combo">1×</div>
+        </div>
       </div>
 
       <div class="title-block">
@@ -922,6 +942,7 @@
       </div>
 
       <div class="header-right">
+        <button class="btn" id="btn-undo">Undo</button>
         <button class="btn" id="btn-hint">Hint</button>
         <button class="btn" id="btn-info" title="How scoring works">Rules</button>
         <button class="btn primary" id="btn-new">New Game</button>
@@ -1075,10 +1096,15 @@
       let left = false, right = false;
       for (const o of list) {
         if (o === p || (o.uid && o.uid === p.uid)) continue;
+        // Tile above blocks completely
         if (o.layer > p.layer && overlaps(p, o)) return { blocked: true };
+        
+        // Horizontal blockage on the same layer
         if (o.layer === p.layer && Math.abs(o.row - p.row) < 1) {
           if (Math.abs(o.col - (p.col - 1)) < 0.5) left = true;
           if (Math.abs(o.col - (p.col + 1)) < 0.5) right = true;
+          // Optimization: if both sides are blocked, we can exit early
+          if (left && right) return { blocked: true };
         }
       }
       return { blocked: left && right };
@@ -1234,6 +1260,7 @@
       infoOverlay: document.getElementById('info-overlay'),
       infoHistory: document.getElementById('info-history'),
       toast: document.getElementById('toast'),
+      comboStat: document.getElementById('stat-combo'),
     };
 
     const state = {
@@ -1246,6 +1273,7 @@
       startTime: null,
       timerInterval: null,
       hintTimeout: null,
+      moveHistory: [],
     };
 
     function tileValue(def) {
@@ -1256,9 +1284,13 @@
        GAME INTIALIZATION & LAYOUT SHUFFLE
        ========================================================================= */
     function newGame() {
+      if (state.timerInterval) clearInterval(state.timerInterval);
+      if (state.hintTimeout) clearTimeout(state.hintTimeout);
+      
       dom.board.innerHTML = '';
       state.tiles = [];
       state.selected = null;
+      state.moveHistory = [];
       state.pairs = 0;
       state.score = 0;
       state.combo = 0;
@@ -1341,7 +1373,8 @@
 
     function tilesMatch(a, b) {
       if (!a || !b) return false;
-      return a.group === b.group;
+      if (a.group && b.group) return a.group === b.group;
+      return a.suit === b.suit && a.sub === b.sub;
     }
 
     /* =========================================================================
@@ -1422,7 +1455,7 @@
       }
 
       const faceVal = def.id === 'drag-w' ? 'white-dragon' : '';
-      const suitClass = `suit-${def.suit}`;
+      const suitClass = def.suit ? `suit-${def.suit}` : '';
       el.innerHTML = `
         <div class="tile-face ${faceVal} ${suitClass}">
           ${faceHtml}
@@ -1502,6 +1535,8 @@
     function onTileClick(tile) {
       if (!isTileFree(tile)) {
         // Play error shake response or return
+        tile.el.classList.add('blocked-shake');
+        setTimeout(() => tile.el && tile.el.classList.remove('blocked-shake'), 400);
         breakCombo();
         return;
       }
@@ -1538,6 +1573,13 @@
       const points = (tileValue(t1.def) + tileValue(t2.def)) * state.combo;
       state.score += points;
       state.pairs++;
+
+      state.moveHistory.push({
+        pair: [{...t1, el: null}, {...t2, el: null}],
+        points,
+        combo: state.combo,
+        lastMatchTime: now
+      });
 
       createMatchParticles(t1, t2);
 
@@ -1582,6 +1624,8 @@
     function updateStats() {
       dom.tilesStat.textContent = state.tiles.length;
       dom.scoreStat.textContent = state.score;
+      dom.comboStat.textContent = `${state.combo || 1}×`;
+      dom.comboStat.classList.toggle('active', state.combo > 1);
     }
 
     /* =========================================================================
@@ -1631,6 +1675,30 @@
       state.hintTimeout = setTimeout(() => {
         tiles.forEach(t => t.el && t.el.classList.remove('hint'));
       }, HINT_FLASH_MS);
+    }
+
+    function undoMove() {
+      if (!state.moveHistory.length) {
+        toast("No moves to undo.");
+        return;
+      }
+
+      const lastMove = state.moveHistory.pop();
+      const [t1, t2] = lastMove.pair;
+      
+      state.tiles.push(t1, t2);
+      state.score -= lastMove.points;
+      state.pairs--;
+      
+      // Rollback combo state to the state before this move
+      const prevMove = state.moveHistory[state.moveHistory.length - 1];
+      state.combo = prevMove ? prevMove.combo : 0;
+      state.lastMatchTime = prevMove ? prevMove.lastMatchTime : 0;
+
+      state.selected = null;
+      renderBoard();
+      updateStats();
+      updateTileStates();
     }
 
     function checkEndState() {
@@ -1769,6 +1837,7 @@
 
     on('btn-new',        newGame);
     on('btn-modal-new',  newGame);
+    on('btn-undo',       undoMove);
     on('btn-hint',       showHint);
     on('btn-info',       showInfo);
     on('btn-info-close', hideInfo);
